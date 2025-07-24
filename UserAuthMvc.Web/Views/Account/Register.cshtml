@@ -1,0 +1,46 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Kayıt Ol";
+}
+<div class="row justify-content-center align-items-center" style="min-height:60vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg border-0 animate__animated animate__fadeInUp">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <span class="display-1 text-success"><i class="bi bi-person-plus"></i></span>
+                    <h2 class="fw-bold mb-0">Kayıt Ol</h2>
+                </div>
+                <form asp-action="Register" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Kullanıcı Adı</label>
+                        <input asp-for="UserName" class="form-control" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre</label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre Tekrar</label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 mb-2">Kayıt Ol</button>
+                </form>
+                <div class="text-center mt-3">
+                    <a asp-action="Login" class="link-primary">Zaten hesabın var mı? Giriş Yap</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+} 

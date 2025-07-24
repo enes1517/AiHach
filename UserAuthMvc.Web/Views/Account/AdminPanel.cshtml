@@ -1,0 +1,26 @@
+@model IEnumerable<UserAuthMvc.Entities.User>
+@{
+    ViewData["Title"] = "Admin Paneli";
+}
+<h2>Admin Paneli</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Kullanıcı Adı</th>
+            <th>Email</th>
+            <th>Admin mi?</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+                <td>@user.IsAdmin</td>
+            </tr>
+        }
+    </tbody>
+</table> 

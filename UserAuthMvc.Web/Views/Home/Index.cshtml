@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+    var userEmail = ViewBag.UserEmail as string;
+    var isAdmin = false;
+    if (Context.Session.GetString("IsAdmin") == "True")
+    {
+        isAdmin = true;
+    }
+}
+<div class="row justify-content-center align-items-center" style="min-height:60vh;">
+    <div class="col-md-7 col-lg-5">
+        <div class="card shadow-lg border-0 animate__animated animate__fadeInDown">
+            <div class="card-body text-center p-5">
+                <h1 class="display-5 mb-3 fw-bold text-primary">Hoş geldin!</h1>
+                <p class="lead mb-4">@userEmail ile giriş yaptınız.</p>
+                @if (isAdmin)
+                {
+                    <a href="/Account/AdminPanel" class="btn btn-primary mb-2 px-4">Admin Paneli</a><br />
+                }
+                <a href="/Account/Logout" class="btn btn-outline-danger px-4">Çıkış Yap</a>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+}

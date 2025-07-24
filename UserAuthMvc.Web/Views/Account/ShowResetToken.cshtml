@@ -1,0 +1,7 @@
+@{
+    ViewData["Title"] = "Şifre Sıfırlama Token";
+}
+<h2>Şifre Sıfırlama Token</h2>
+<p>Şifre sıfırlama için bu token'ı kullanın:</p>
+<p><strong>@ViewBag.Token</strong></p>
+<a asp-action="ResetPassword" asp-route-token="@ViewBag.Token">Şifreyi Sıfırla</a> 
