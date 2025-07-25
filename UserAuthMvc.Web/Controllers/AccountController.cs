@@ -107,5 +107,16 @@ namespace UserAuthMvc.Web.Controllers
             var users = _userService.GetAllUsers();
             return View(users);
         }
+
+        [HttpGet]
+        public IActionResult CreateTestUser()
+        {
+            // Sadece test için: Kullanıcıyı ekle
+            var result = _userService.Register("enes", "enes@gmail.com", "2266");
+            if (result)
+                return Content("Test kullanıcısı oluşturuldu.");
+            else
+                return Content("Kullanıcı zaten mevcut.");
+        }
     }
 } 

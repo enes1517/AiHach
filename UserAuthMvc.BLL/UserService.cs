@@ -43,7 +43,7 @@ namespace UserAuthMvc.BLL
             token = null;
             var user = _context.Users.FirstOrDefault(u => u.Email == email);
             if (user == null) return false;
-            token = Guid.NewGuid().ToString();
+            token = email; // Sadece email adresini token olarak ata
             user.ResetToken = token;
             user.ResetTokenExpiry = DateTime.Now.AddHours(1);
             _context.SaveChanges();
