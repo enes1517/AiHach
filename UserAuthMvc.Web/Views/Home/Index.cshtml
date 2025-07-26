@@ -7,21 +7,100 @@
         isAdmin = true;
     }
 }
-<div class="row justify-content-center align-items-center" style="min-height:60vh;">
-    <div class="col-md-7 col-lg-5">
-        <div class="card shadow-lg border-0 animate__animated animate__fadeInDown">
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0 animate__animated animate__fadeInDown floating-animation">
             <div class="card-body text-center p-5">
-                <h1 class="display-5 mb-3 fw-bold text-primary">Hoş geldin!</h1>
-                <p class="lead mb-4">@userEmail ile giriş yaptınız.</p>
-                @if (isAdmin)
-                {
-                    <a href="/Account/AdminPanel" class="btn btn-primary mb-2 px-4">Admin Paneli</a><br />
-                }
-                <a href="/Account/Logout" class="btn btn-outline-danger px-4">Çıkış Yap</a>
+                <div class="display-1 text-primary pulse-animation mb-4">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                
+                <h1 class="display-5 mb-3 fw-bold text-primary">Hoş Geldiniz!</h1>
+                <p class="lead mb-4">
+                    <i class="bi bi-envelope me-2"></i>
+                    <strong>@userEmail</strong> ile başarıyla giriş yaptınız.
+                </p>
+                
+                <div class="alert alert-success animate__animated animate__fadeInUp" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Hesabınıza güvenli bir şekilde erişim sağladınız.
+                </div>
+                
+                <div class="d-grid gap-3 d-md-block">
+                    @if (isAdmin)
+                    {
+                        <a href="/Account/AdminPanel" class="btn btn-primary btn-lg px-5 me-md-2 pulse-animation">
+                            <i class="bi bi-gear me-2"></i>Admin Paneli
+                        </a>
+                    }
+                    <a href="/Account/Logout" class="btn btn-outline-danger btn-lg px-5">
+                        <i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap
+                    </a>
+                </div>
+                
+                <div class="mt-5">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <i class="bi bi-shield-check display-6 text-success mb-2"></i>
+                                <h5>Güvenli</h5>
+                                <small class="text-muted">Güvenli kimlik doğrulama</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <i class="bi bi-lightning display-6 text-warning mb-2"></i>
+                                <h5>Hızlı</h5>
+                                <small class="text-muted">Anında erişim</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <i class="bi bi-heart display-6 text-danger mb-2"></i>
+                                <h5>Kolay</h5>
+                                <small class="text-muted">Kullanıcı dostu arayüz</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-@section Styles {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+@section Scripts {
+    <script>
+        // Sayfa yüklendiğinde animasyonlar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kart animasyonu
+            const card = document.querySelector('.card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(50px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.8s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // İkon animasyonları
+            const icons = document.querySelectorAll('.bi');
+            icons.forEach((icon, index) => {
+                setTimeout(() => {
+                    icon.classList.add('animate__animated', 'animate__bounceIn');
+                }, 200 * index);
+            });
+        });
+        
+        // Buton hover efektleri
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px) scale(1.02)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
 }

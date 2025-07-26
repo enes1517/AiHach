@@ -2,45 +2,160 @@
 @{
     ViewData["Title"] = "Kayıt Ol";
 }
-<div class="row justify-content-center align-items-center" style="min-height:60vh;">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-lg border-0 animate__animated animate__fadeInUp">
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0 animate__animated animate__fadeInUp floating-animation">
             <div class="card-body p-5">
                 <div class="text-center mb-4">
-                    <span class="display-1 text-success"><i class="bi bi-person-plus"></i></span>
-                    <h2 class="fw-bold mb-0">Kayıt Ol</h2>
+                    <div class="display-1 text-success pulse-animation mb-3">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <h2 class="fw-bold mb-2 text-success">Hesap Oluştur</h2>
+                    <p class="text-muted">Yeni hesabınızı oluşturun ve başlayın</p>
                 </div>
+                
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger animate__animated animate__shakeX" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Lütfen form hatalarını düzeltin.
+                    </div>
+                }
+                
                 <form asp-action="Register" method="post">
-                    <div class="mb-3">
-                        <label class="form-label">Kullanıcı Adı</label>
-                        <input asp-for="UserName" class="form-control" />
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-person me-2"></i>Kullanıcı Adı
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="bi bi-person text-muted"></i>
+                            </span>
+                            <input asp-for="UserName" class="form-control border-start-0" placeholder="Kullanıcı adınızı girin" />
+                        </div>
                         <span asp-validation-for="UserName" class="text-danger"></span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" />
+                    
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-envelope me-2"></i>E-posta Adresi
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="bi bi-envelope text-muted"></i>
+                            </span>
+                            <input asp-for="Email" class="form-control border-start-0" placeholder="ornek@email.com" />
+                        </div>
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Şifre</label>
-                        <input asp-for="Password" type="password" class="form-control" />
+                    
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-lock me-2"></i>Şifre
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="bi bi-lock text-muted"></i>
+                            </span>
+                            <input asp-for="Password" type="password" class="form-control border-start-0" placeholder="••••••••" />
+                            <button class="btn btn-outline-secondary border-start-0" type="button" id="togglePassword1">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Şifre Tekrar</label>
-                        <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                    
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-lock-fill me-2"></i>Şifre Tekrar
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="bi bi-lock-fill text-muted"></i>
+                            </span>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control border-start-0" placeholder="••••••••" />
+                            <button class="btn btn-outline-secondary border-start-0" type="button" id="togglePassword2">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
-                    <button type="submit" class="btn btn-success w-100 mb-2">Kayıt Ol</button>
+                    
+                    <button type="submit" class="btn btn-success w-100 mb-3 pulse-animation">
+                        <i class="bi bi-person-plus me-2"></i>Hesap Oluştur
+                    </button>
                 </form>
-                <div class="text-center mt-3">
-                    <a asp-action="Login" class="link-primary">Zaten hesabın var mı? Giriş Yap</a>
+                
+                <div class="text-center">
+                    <div class="position-relative mb-3">
+                        <hr class="text-muted">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                            <i class="bi bi-shield-check"></i>
+                        </span>
+                    </div>
+                    
+                    <p class="text-muted mb-0">
+                        Zaten hesabınız var mı? 
+                        <a asp-action="Login" class="link-primary fw-bold">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Giriş Yap
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-@section Styles {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+@section Scripts {
+    <script>
+        // Şifre göster/gizle fonksiyonları
+        function togglePasswordVisibility(inputId, buttonId) {
+            const passwordInput = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            const icon = button.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+        
+        document.getElementById('togglePassword1').addEventListener('click', function() {
+            togglePasswordVisibility('Password', 'togglePassword1');
+        });
+        
+        document.getElementById('togglePassword2').addEventListener('click', function() {
+            togglePasswordVisibility('ConfirmPassword', 'togglePassword2');
+        });
+        
+        // Form animasyonları
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('animate__animated', 'animate__pulse');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('animate__animated', 'animate__pulse');
+            });
+        });
+        
+        // Şifre eşleşme kontrolü
+        document.getElementById('ConfirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('Password').value;
+            const confirmPassword = this.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                this.style.borderColor = '#dc3545';
+                this.nextElementSibling.querySelector('i').style.color = '#dc3545';
+            } else {
+                this.style.borderColor = '#198754';
+                this.nextElementSibling.querySelector('i').style.color = '#198754';
+            }
+        });
+    </script>
 } 

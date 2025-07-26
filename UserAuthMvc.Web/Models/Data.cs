@@ -6,16 +6,16 @@ namespace UserAuthMvc.Web.Models;
 
 public class RegisterViewModel
 {
-    public string UserName { get; set; }
+    public string UserName { get; set; } = null!;
     [Required(ErrorMessage = "E-Mail is required.")]
     [EmailAddress(ErrorMessage = "Please enter a valid e-mail address.")]
-    public string Email { get; set; }
+    public string Email { get; set; } = null!;
     [Required(ErrorMessage = "Password is required.")]
     [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
-    public string Password { get; set; }
+    public string Password { get; set; } = null!;
     [Required(ErrorMessage = "Password is required.")]
     [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
-    public string ConfirmPassword { get; set; }
+    public string ConfirmPassword { get; set; } = null!;
 }
 
 public class LoginViewModel
@@ -39,11 +39,11 @@ public class ResetPasswordViewModel
 {
     [Required(ErrorMessage = "Password is required.")]
     [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
-    public string Token { get; set; }
+    public string Token { get; set; } = null!;
     [Required(ErrorMessage = "Password is required.")]
     [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
-    public string NewPassword { get; set; }
+    public string NewPassword { get; set; } = null!;
     [Required(ErrorMessage = "Password is required.")]
     [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
-    public string ConfirmPassword { get; set; }
+    public string ConfirmPassword { get; set; } = null!;
 }
