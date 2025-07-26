@@ -21,8 +21,8 @@ namespace UserAuthMvc.Entities
         [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
         public string PasswordHash { get; set; }
         public bool IsAdmin { get; set; } = false;
-        [Required(ErrorMessage = "Password is required")]
-        [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
+        
+        [StringLength(128, ErrorMessage = "The reset token can be up to 128 characters.")]
         public string? ResetToken { get; set; }
         public DateTime? ResetTokenExpiry { get; set; }
     }

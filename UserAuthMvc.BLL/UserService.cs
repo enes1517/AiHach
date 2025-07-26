@@ -41,13 +41,23 @@ namespace UserAuthMvc.BLL
         public bool RequestPasswordReset(string email, out string token)
         {
             token = null;
-            var user = _context.Users.FirstOrDefault(u => u.Email == email);
-            if (user == null) return false;
-            token = email; // Sadece email adresini token olarak ata
-            user.ResetToken = token;
-            user.ResetTokenExpiry = DateTime.Now.AddHours(1);
-            _context.SaveChanges();
-            return true;
+            try
+            {
+                var user = _context.Users.FirstOrDefault(u => u.Email == email);
+                if (user == null) return false;
+                
+                // Güvenli token oluştur
+                token = Guid.NewGuid().ToString();
+                user.ResetToken = token;
+                user.ResetTokenExpiry = DateTime.Now.AddHours(1);
+                _context.SaveChanges();
+                return true;
+            }
+            catch (Exception)
+            {
+                token = null;
+                return false;
+            }
         }
 
         public bool ResetPassword(string token, string newPassword)
