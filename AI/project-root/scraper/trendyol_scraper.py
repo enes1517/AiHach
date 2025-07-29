@@ -12,7 +12,7 @@ def scroll_to_bottom(driver, pause_time=2, max_scrolls=10):
 
 def scrape_trendyol(query: str, max_pages: int = 1, max_results: int = 100) -> list:
     options = Options()
-    # options.add_argument("--headless")  # Görünmez tarayıcı istersen aktif et
+    options.add_argument("--headless")  # Görünmez tarayıcı istersen aktif et
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
 
