@@ -1,35 +1,43 @@
 from scraper.trendyol_scraper import scrape_trendyol
-from filters.product_filter import filter_products
-from llm.gemini_suggester import extract_filters_from_prompt
+from llm.gemini_suggester import extract_filters_from_prompt, analyze_products_with_gemini
+import re
 
 def main():
-    user_input = input("🤖 Ne arıyorsun? ")
+    user_input = input("🧠 Ne istiyorsun? (örnek: 3000 TL altı kulaklık arıyorum): ")
 
-    print("\n📦 Gemini filtre çıkartıyor...")
     filters = extract_filters_from_prompt(user_input)
+    print(f"\n🎯 Gemini'den filtreler alındı: {filters}")
 
-    if not filters:
-        print("⚠️ Filtre çıkarılamadı.")
+    query = filters.get("query", user_input).lower().strip()
+    max_price = filters.get("max_price", None)
+
+    # ❗ Query içinden fiyat ifadesini çıkar, sadece ürün türünü bırak (örnek: "kulaklık")
+    match = re.search(r"(?:\d+\s*TL\s*(?:altı|üstü)?\s*)?(.*)", query, flags=re.IGNORECASE)
+    if match:
+        query = match.group(1).strip()
+
+    print(f"📦 Trendyol'a gönderilen arama terimi: '{query}'")
+    print(f"💰 Fiyat filtresi: {max_price} TL")
+
+    all_products = scrape_trendyol(query, max_pages=2, max_results=100)
+
+    if not all_products:
+        print("❌ Ürün bulunamadı.")
         return
 
-    print(f"🔍 Sorgu: {filters['query']}")
-    print(f"💰 Maks Fiyat: {filters['max_price']}")
-    print(f"🔑 Anahtar Kelimeler: {filters['keywords']}\n")
+    # 🔻 Fiyat filtresi uygula
+    if max_price:
+        all_products = [p for p in all_products if p["price"] <= max_price]
 
-    print("📡 Trendyol'dan ürünler çekiliyor...")
-    products = scrape_trendyol(filters['query'])
-
-    print(f"🔧 Ürün sayısı: {len(products)} - Filtreleniyor...")
-    filtered = filter_products(products, max_price=filters["max_price"], keywords=filters["keywords"])
-
-    if not filtered:
-        print("❌ Filtreye uyan ürün bulunamadı.")
+    if not all_products:
+        print("❌ Fiyat filtresinden sonra ürün kalmadı.")
         return
 
-    print(f"\n🎯 En iyi {min(5, len(filtered))} ürün:")
-    for p in filtered[:5]:
-        print(f"- {p['name']} - {p['price']} TL")
-        print(f"🔗 {p['url']}\n")
+    print(f"✅ {len(all_products)} ürün bulundu. Gemini’ye gönderiliyor...\n")
+
+    response = analyze_products_with_gemini(all_products, user_input)
+    print("📋 Gemini Cevabı:\n")
+    print(response)
 
 if __name__ == "__main__":
     main()

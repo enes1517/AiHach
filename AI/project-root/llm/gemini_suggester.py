@@ -1,44 +1,61 @@
 import os
-import json
 import google.generativeai as genai
 from dotenv import load_dotenv
+import json  # eval yerine json kullanılmalı
 
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel(model_name="models/gemini-2.5-flash-lite")
 
+def analyze_products_with_gemini(products: list, user_request: str = "") -> str:
+    prompt = f"""
+Kullanıcının isteği: "{user_request}"
+
+Aşağıda Trendyol'dan çekilen ürün listesi yer almaktadır. Her ürün sözlük olarak:
+- name
+- price
+- rating
+- rating_count
+- link
+şeklindedir.
+
+Ürün listesi:
+{products}
+
+Yukarıdaki ürünleri, kullanıcının isteğine göre filtrele ve analiz et.
+En iyi ürünleri öner. Türkçe, sade ve anlaşılır şekilde cevap ver.
+"""
+    response = model.generate_content(prompt)
+    return response.text
+
+import re
+
 def extract_filters_from_prompt(user_input: str) -> dict:
     prompt = f"""
 Kullanıcının isteği: "{user_input}"
 
-Aşağıdaki JSON formatına sıkı sıkıya uyarak cevap ver. Açıklama yapma, sadece JSON olarak dön:
-
+Sadece aşağıdaki formatta geçerli bir JSON ver:
+Açıklama yapma, sadece JSON ver:
 {{
-  "query": "...",        
-  "category": "...",     
-  "max_price": ...,      
-  "keywords": ["...", "..."]
+  "query": "...",
+  "max_price": ...,
+  "category": "..."
 }}
-
-Lütfen sadece geçerli bir JSON çıktısı ver. Kod bloğu veya başka bir şey olmasın.
 """
-
     response = model.generate_content(prompt)
+    raw = response.text.strip()
+
+    # Markdown blockları temizle: ```json ... ```
+    cleaned = re.sub(r"^```json|```$", "", raw, flags=re.MULTILINE).strip()
 
     try:
-        response_text = response.text if hasattr(response, "text") else response.parts[0].text
-
-        cleaned = response_text.strip().replace("```json", "").replace("```", "").strip()
-
-        try:
-            return json.loads(cleaned)
-        except Exception as e:
-            print("❌ JSON parsing after cleanup da başarısız:", e)
-            print("Yanıt (temizlenmiş):", cleaned)
-        return {}
-
-    except Exception as e:
-        print("❌ JSON çözümleme hatası:", e)
-        print("Yanıt:", response_text)
-        return {}
+        return json.loads(cleaned)
+    except Exception:
+        print("⚠️ JSON çözümleme hatası.")
+        print("🔎 Gelen veri:", raw)
+        return {
+            "query": user_input,
+            "max_price": None,
+            "category": ""
+        }
