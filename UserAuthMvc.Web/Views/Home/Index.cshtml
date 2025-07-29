@@ -63,6 +63,26 @@
                         </div>
                     </div>
                 </div>
+                <!-- AI Arayüzü Başlangıç -->
+                <div class="mt-5">
+                    <div class="card shadow border-0 animate__animated animate__fadeInUp">
+                        <div class="card-body p-4">
+                            <h3 class="mb-3 text-primary"><i class="bi bi-robot me-2"></i>Yapay Zeka Ürün Asistanı</h3>
+                            <form id="aiForm" autocomplete="off">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control form-control-lg" id="userPrompt" placeholder="Ör: 3000 TL altı kulaklık arıyorum" required>
+                                    <button class="btn btn-primary btn-lg" type="submit" id="aiSubmit">
+                                        <span id="aiBtnText"><i class="bi bi-lightning-charge me-1"></i>Yapay Zeka ile Ara</span>
+                                        <span id="aiLoading" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </form>
+                            <div id="aiError" class="alert alert-danger d-none mt-3"></div>
+                            <div id="aiResult" class="mt-4" style="min-height: 80px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- AI Arayüzü Bitiş -->
             </div>
         </div>
     </div>
@@ -101,6 +121,42 @@
             button.addEventListener('mouseleave', function() {
                 this.style.transform = 'translateY(0) scale(1)';
             });
+        });
+
+        // AI Arayüzü Scripti
+        document.getElementById('aiForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const prompt = document.getElementById('userPrompt').value.trim();
+            const resultDiv = document.getElementById('aiResult');
+            const errorDiv = document.getElementById('aiError');
+            const btnText = document.getElementById('aiBtnText');
+            const loading = document.getElementById('aiLoading');
+            resultDiv.innerHTML = '';
+            errorDiv.classList.add('d-none');
+            btnText.classList.add('d-none');
+            loading.classList.remove('d-none');
+            try {
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_input: prompt })
+                });
+                btnText.classList.remove('d-none');
+                loading.classList.add('d-none');
+                if (!response.ok) {
+                    const err = await response.json();
+                    errorDiv.textContent = err.error || 'Bir hata oluştu.';
+                    errorDiv.classList.remove('d-none');
+                    return;
+                }
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class='alert alert-info animate__animated animate__fadeIn'><i class='bi bi-stars me-2'></i>${data.result.replace(/\n/g, '<br>')}</div>`;
+            } catch (err) {
+                btnText.classList.remove('d-none');
+                loading.classList.add('d-none');
+                errorDiv.textContent = 'Sunucuya ulaşılamıyor veya ağ hatası.';
+                errorDiv.classList.remove('d-none');
+            }
         });
     </script>
 }
