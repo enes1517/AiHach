@@ -66,3 +66,34 @@ En iyi ürünleri öner. Türkçe, sade ve anlaşılır şekilde cevap ver.
 """
     response = gemini_model.generate_content(prompt)
     return response.text
+
+def explain_recommendation(products: list, query: str) -> list:
+    prompt = f"""
+Kullanıcının isteği: "{query}"
+
+Aşağıda Trendyol'dan alınan ürünlerin listesi vardır. Her ürün bir sözlük şeklindedir:
+- title
+- price
+- link
+- rating
+- rating_count
+
+Amaç: Kullanıcıya her ürünün neden önerildiğini bir cümleyle açıklamaktır.
+
+Lütfen her ürün için kısa, Türkçe, sade bir açıklama üret ve sadece açıklamaları içeren bir JSON listesi ver:
+[
+  "...",
+  "...",
+  "..."
+]
+
+Ürünler:
+{json.dumps(products, ensure_ascii=False)}
+"""
+    try:
+        response = gemini_model.generate_content(prompt)
+        parsed = json.loads(response.text)
+        return parsed if isinstance(parsed, list) else []
+    except Exception as e:
+        print("⚠️ Açıklama üretim hatası:", e)
+        return ["Bu ürün uygun bulundu." for _ in products]
