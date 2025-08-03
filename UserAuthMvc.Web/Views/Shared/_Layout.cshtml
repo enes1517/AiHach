@@ -45,26 +45,26 @@
             position: relative;
         }
 
-        .nav-link:hover {
-            color: #667eea !important;
-            transform: translateY(-2px);
-        }
+            .nav-link:hover {
+                color: #667eea !important;
+                transform: translateY(-2px);
+            }
 
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: 0;
-            left: 50%;
-            background: var(--primary-gradient);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-        }
+            .nav-link::after {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 2px;
+                bottom: 0;
+                left: 50%;
+                background: var(--primary-gradient);
+                transition: all 0.3s ease;
+                transform: translateX(-50%);
+            }
 
-        .nav-link:hover::after {
-            width: 100%;
-        }
+            .nav-link:hover::after {
+                width: 100%;
+            }
 
         .card {
             background: rgba(255, 255, 255, 0.95);
@@ -75,10 +75,10 @@
             transition: all 0.3s ease;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
-        }
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+            }
 
         .btn {
             border-radius: 50px;
@@ -90,40 +90,40 @@
             overflow: hidden;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
+            .btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+                transition: left 0.5s;
+            }
 
-        .btn:hover::before {
-            left: 100%;
-        }
+            .btn:hover::before {
+                left: 100%;
+            }
 
         .btn-primary {
             background: var(--primary-gradient);
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-        }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            }
 
         .btn-success {
             background: var(--success-gradient);
             box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
         }
 
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
-        }
+            .btn-success:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
+            }
 
         .btn-outline-danger {
             background: transparent;
@@ -131,12 +131,12 @@
             color: #dc3545;
         }
 
-        .btn-outline-danger:hover {
-            background: var(--danger-gradient);
-            border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
-        }
+            .btn-outline-danger:hover {
+                background: var(--danger-gradient);
+                border-color: transparent;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+            }
 
         .form-control {
             border-radius: 15px;
@@ -147,12 +147,12 @@
             background: rgba(255, 255, 255, 0.9);
         }
 
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-            background: rgba(255, 255, 255, 1);
-            transform: translateY(-2px);
-        }
+            .form-control:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+                background: rgba(255, 255, 255, 1);
+                transform: translateY(-2px);
+            }
 
         .form-label {
             font-weight: 600;
@@ -181,10 +181,10 @@
             transition: all 0.3s ease;
         }
 
-        .link-primary:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
+            .link-primary:hover {
+                color: #764ba2;
+                text-decoration: underline;
+            }
 
         .link-danger {
             text-decoration: none;
@@ -193,10 +193,10 @@
             transition: all 0.3s ease;
         }
 
-        .link-danger:hover {
-            color: #c82333;
-            text-decoration: underline;
-        }
+            .link-danger:hover {
+                color: #c82333;
+                text-decoration: underline;
+            }
 
         .display-1 {
             font-size: 4rem;
@@ -234,8 +234,13 @@
         }
 
         @@keyframes floating {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            0%, 100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         .pulse-animation {
@@ -243,9 +248,17 @@
         }
 
         @@keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
     @RenderSection("Styles", required: false)

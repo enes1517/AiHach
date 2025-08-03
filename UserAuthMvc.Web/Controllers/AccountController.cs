@@ -19,7 +19,11 @@ namespace UserAuthMvc.Web.Controllers
         [HttpPost]
         public IActionResult Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, "Lütfen tüm alanları doğru doldurun.");
+                return View(model);
+            }
             if (model.Password != model.ConfirmPassword)
             {
                 ModelState.AddModelError("Password", "Şifreler eşleşmiyor.");
@@ -31,6 +35,7 @@ namespace UserAuthMvc.Web.Controllers
                 ModelState.AddModelError("Email", "Bu email zaten kayıtlı.");
                 return View(model);
             }
+            TempData["RegisterSuccess"] = "Kayıt başarılı! Şimdi giriş yapabilirsiniz.";
             return RedirectToAction("Login");
         }
 
@@ -40,14 +45,17 @@ namespace UserAuthMvc.Web.Controllers
         [HttpPost]
         public IActionResult Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, "Lütfen tüm alanları doğru doldurun.");
+                return View(model);
+            }
             var user = _userService.Authenticate(model.Email, model.Password);
             if (user == null)
             {
-                ModelState.AddModelError("Email", "Geçersiz giriş.");
+                ModelState.AddModelError("Email", "Geçersiz email veya şifre.");
                 return View(model);
             }
-            // Basit session ile giriş
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("IsAdmin", user.IsAdmin.ToString());
             return RedirectToAction("Index", "Home");
@@ -65,10 +73,13 @@ namespace UserAuthMvc.Web.Controllers
         [HttpPost]
         public IActionResult ResetPasswordRequest(ResetPasswordRequestViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, "Lütfen geçerli bir email girin.");
+                return View(model);
+            }
             if (_userService.RequestPasswordReset(model.Email, out var token))
             {
-                // Normalde email gönderilir, burada ekrana gösteriyoruz
                 ViewBag.Token = token;
                 return View("ShowResetToken");
             }
@@ -85,7 +96,11 @@ namespace UserAuthMvc.Web.Controllers
         [HttpPost]
         public IActionResult ResetPassword(ResetPasswordViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, "Lütfen tüm alanları doğru doldurun.");
+                return View(model);
+            }
             if (model.NewPassword != model.ConfirmPassword)
             {
                 ModelState.AddModelError("NewPassword", "Şifreler eşleşmiyor.");
@@ -93,30 +108,15 @@ namespace UserAuthMvc.Web.Controllers
             }
             if (_userService.ResetPassword(model.Token, model.NewPassword))
             {
+                TempData["ResetSuccess"] = "Şifre başarıyla değiştirildi. Giriş yapabilirsiniz.";
                 return RedirectToAction("Login");
             }
             ModelState.AddModelError("Token", "Token geçersiz veya süresi dolmuş.");
             return View(model);
         }
 
-        public IActionResult AdminPanel()
-        {
-            var isAdmin = HttpContext.Session.GetString("IsAdmin");
-            if (isAdmin != "True") return Unauthorized();
-            // Basit admin paneli: tüm kullanıcıları listele
-            var users = _userService.GetAllUsers();
-            return View(users);
-        }
+      
 
-        [HttpGet]
-        public IActionResult CreateTestUser()
-        {
-            // Sadece test için: Kullanıcıyı ekle
-            var result = _userService.Register("enes", "enes@gmail.com", "2266");
-            if (result)
-                return Content("Test kullanıcısı oluşturuldu.");
-            else
-                return Content("Kullanıcı zaten mevcut.");
-        }
+       
     }
 } 

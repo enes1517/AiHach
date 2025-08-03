@@ -47,3 +47,11 @@ public class ResetPasswordViewModel
     [StringLength(128, MinimumLength = 6, ErrorMessage = "The password can be at least 6 and at most 128 characters.")]
     public string ConfirmPassword { get; set; } = null!;
 }
+
+public class Product
+{
+    public string name { get; set; }
+    public double price { get; set; }
+    public string image { get; set; }
+    public string link { get; set; }
+}

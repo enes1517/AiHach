@@ -77,10 +77,7 @@ namespace UserAuthMvc.BLL
             return user != null && user.IsAdmin;
         }
 
-        public IQueryable<User> GetAllUsers()
-        {
-            return _context.Users;
-        }
+     
 
         private string HashPassword(string password)
         {
