@@ -1,0 +1,230 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+    var userEmail = ViewBag.UserEmail as string;
+    var isAdmin = false;
+    if (Context.Session.GetString("IsAdmin") == "True")
+    {
+        isAdmin = true;
+    }
+}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0 animate__animated animate__fadeInDown floating-animation">
+            <div class="card-body text-center p-5">
+                <div class="display-1 text-primary pulse-animation mb-4">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                
+                <h1 class="display-5 mb-3 fw-bold text-primary">Hoş Geldiniz!</h1>
+                <p class="lead mb-4">
+                    <i class="bi bi-envelope me-2"></i>
+                    <strong>@userEmail</strong> ile başarıyla giriş yaptınız.
+                </p>
+                
+                <div class="alert alert-success animate__animated animate__fadeInUp" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Hesabınıza güvenli bir şekilde erişim sağladınız.
+                </div>
+                
+                <div class="d-grid gap-3 d-md-block">
+                    @if (isAdmin)
+                    {
+                        <a href="/Account/AdminPanel" class="btn btn-primary btn-lg px-5 me-md-2 pulse-animation">
+                            <i class="bi bi-gear me-2"></i>Admin Paneli
+                        </a>
+                    }
+                    <a href="/Account/Logout" class="btn btn-outline-danger btn-lg px-5">
+                        <i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap
+                    </a>
+                </div>
+                
+                <div class="mt-5">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <i class="bi bi-shield-check display-6 text-success mb-2"></i>
+                                <h5>Güvenli</h5>
+                                <small class="text-muted">Güvenli kimlik doğrulama</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <i class="bi bi-lightning display-6 text-warning mb-2"></i>
+                                <h5>Hızlı</h5>
+                                <small class="text-muted">Anında erişim</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <i class="bi bi-heart display-6 text-danger mb-2"></i>
+                                <h5>Kolay</h5>
+                                <small class="text-muted">Kullanıcı dostu arayüz</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- AI Arayüzü Başlangıç -->
+                <div class="mt-5">
+                    <div class="card shadow border-0 animate__animated animate__fadeInUp">
+                        <div class="card-body p-4">
+                            <h3 class="mb-3 text-primary"><i class="bi bi-robot me-2"></i>Yapay Zeka Ürün Asistanı</h3>
+                            <form id="aiForm" autocomplete="off">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control form-control-lg" id="userPrompt" placeholder="Ör: 3000 TL altı kulaklık arıyorum" required>
+                                    <button class="btn btn-primary btn-lg" type="submit" id="aiSubmit">
+                                        <span id="aiBtnText"><i class="bi bi-lightning-charge me-1"></i>Yapay Zeka ile Ara</span>
+                                        <span id="aiLoading" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </form>
+                            <div id="aiError" class="alert alert-danger d-none mt-3"></div>
+                            <div id="aiResult" class="mt-4" style="min-height: 80px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- AI Arayüzü Bitiş -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.custom-product-card {
+    border-radius: 16px;
+    border: 1px solid #f0f0f0;
+    background: #fff;
+    transition: box-shadow 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.custom-product-card:hover {
+    box-shadow: 0 8px 24px rgba(44,62,80,0.10), 0 1.5px 4px rgba(44,62,80,0.08);
+    transform: translateY(-4px) scale(1.03);
+}
+.img-container {
+    width: 100%;
+    height: 180px;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    overflow: hidden;
+}
+.img-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.product-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: #222;
+    min-height: 48px;
+    overflow: hidden;
+}
+.product-price {
+    font-size: 1.1em;
+    color: #e67e22;
+    font-weight: bold;
+}
+</style>
+
+@section Scripts {
+    <script>
+        // Sayfa yüklendiğinde animasyonlar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kart animasyonu
+            const card = document.querySelector('.card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(50px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.8s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // İkon animasyonları
+            const icons = document.querySelectorAll('.bi');
+            icons.forEach((icon, index) => {
+                setTimeout(() => {
+                    icon.classList.add('animate__animated', 'animate__bounceIn');
+                }, 200 * index);
+            });
+        });
+        
+        // Buton hover efektleri
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px) scale(1.02)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // AI Arayüzü Scripti
+        document.getElementById('aiForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const prompt = document.getElementById('userPrompt').value.trim();
+            const resultDiv = document.getElementById('aiResult');
+            const errorDiv = document.getElementById('aiError');
+            const btnText = document.getElementById('aiBtnText');
+            const loading = document.getElementById('aiLoading');
+            resultDiv.innerHTML = '';
+            errorDiv.classList.add('d-none');
+            btnText.classList.add('d-none');
+            loading.classList.remove('d-none');
+            try {
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_input: prompt })
+                });
+                btnText.classList.remove('d-none');
+                loading.classList.add('d-none');
+                if (!response.ok) {
+                    const err = await response.json();
+                    errorDiv.textContent = err.error || 'Bir hata oluştu.';
+                    errorDiv.classList.remove('d-none');
+                    return;
+                }
+                const data = await response.json();
+                // Ürünleri kart olarak göster (sadece ilk 8 ürün)
+                if (data.products && data.products.length > 0) {
+                    const maxProducts = 8;
+                    let html = '<div class="row justify-content-center">';
+                    data.products.slice(0, maxProducts).forEach(product => {
+                        html += `
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                        <div class="custom-product-card h-100 shadow-sm">
+                            <div class="img-container">
+                                <img src="${product.image || '/wwwroot/img/no-image.png'}" class="card-img-top" alt="${product.name}" onerror="this.onerror=null;this.src='/wwwroot/img/no-image.png';">
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <div class="product-title mb-2" title="${product.name}">${product.name.length > 60 ? product.name.substring(0, 57) + '...' : product.name}</div>
+                                <div class="product-price mb-3">${product.price} <span class="text-muted">TL</span></div>
+                                <a href="${product.link}" target="_blank" class="btn btn-primary btn-sm mt-auto w-100">Trendyol'da Gör</a>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                    });
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = "<div class='alert alert-warning'>Ürün bulunamadı.</div>";
+                }
+            } catch (err) {
+                btnText.classList.remove('d-none');
+                loading.classList.add('d-none');
+                errorDiv.textContent = 'Sunucuya ulaşılamıyor veya ağ hatası.';
+                errorDiv.classList.remove('d-none');
+            }
+        });
+    </script>
+}

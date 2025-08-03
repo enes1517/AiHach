@@ -1,0 +1,20 @@
+@model List<UserAuthMvc.Web.Models.Product>
+
+<h2>Arama Sonuçları</h2>
+@if (Model == null || !Model.Any())
+{
+    <div>Ürün bulunamadı.</div>
+}
+else
+{
+    <div style="display:flex; flex-wrap:wrap; gap:20px;">
+    @foreach (var product in Model)
+    {
+        <div style="border:1px solid #ddd; border-radius:8px; padding:10px; width:220px; box-shadow:2px 2px 8px #eee;">
+            <img src="@product.image" alt="@product.name" style="width:200px; height:200px; object-fit:contain;" />
+            <div>@product.name</div>
+            <div style="color:#e67e22; font-weight:bold;">@product.price TL</div>
+        </div>
+    }
+    </div>
+}

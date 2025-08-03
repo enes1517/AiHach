@@ -1,0 +1,125 @@
+@{
+    ViewData["Title"] = "Şifre Sıfırlama Token";
+}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0 animate__animated animate__fadeInUp floating-animation">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <div class="display-1 text-info pulse-animation mb-3">
+                        <i class="bi bi-key-fill"></i>
+                    </div>
+                    <h2 class="fw-bold mb-2 text-info">Şifre Sıfırlama Token</h2>
+                    <p class="text-muted">Bu token'ı kullanarak şifrenizi sıfırlayabilirsiniz</p>
+                </div>
+                
+                <div class="alert alert-info animate__animated animate__fadeInUp" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-3 display-6"></i>
+                        <div>
+                            <h5 class="alert-heading">Token Bilgisi</h5>
+                            <p class="mb-0">Aşağıdaki token'ı kopyalayın ve şifre sıfırlama sayfasında kullanın.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-clipboard me-2"></i>Şifre Sıfırlama Token
+                    </label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="@ViewBag.Token" id="tokenInput" readonly />
+                        <button class="btn btn-outline-primary" type="button" id="copyToken">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Bu token'ı güvenli bir yerde saklayın ve kimseyle paylaşmayın.
+                    </small>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a asp-action="ResetPassword" asp-route-token="@ViewBag.Token" class="btn btn-info btn-lg pulse-animation">
+                        <i class="bi bi-arrow-right me-2"></i>Şifreyi Sıfırla
+                    </a>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <div class="position-relative mb-3">
+                        <hr class="text-muted">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                            <i class="bi bi-shield-check"></i>
+                        </span>
+                    </div>
+                    
+                    <a asp-action="Login" class="link-primary fw-bold">
+                        <i class="bi bi-arrow-left me-1"></i>Giriş Sayfasına Dön
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Token kopyalama fonksiyonu
+        document.getElementById('copyToken').addEventListener('click', function() {
+            const tokenInput = document.getElementById('tokenInput');
+            const button = this;
+            const icon = button.querySelector('i');
+            
+            // Token'ı kopyala
+            tokenInput.select();
+            tokenInput.setSelectionRange(0, 99999); // Mobil için
+            document.execCommand('copy');
+            
+            // Buton animasyonu
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-success');
+            icon.classList.remove('bi-clipboard');
+            icon.classList.add('bi-check');
+            
+            // Başarı mesajı
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check"></i> Kopyalandı!';
+            
+            setTimeout(() => {
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-primary');
+                button.innerHTML = originalText;
+            }, 2000);
+        });
+        
+        // Token input'a tıklandığında otomatik seçim
+        document.getElementById('tokenInput').addEventListener('click', function() {
+            this.select();
+        });
+        
+        // Sayfa yüklendiğinde animasyonlar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Token input animasyonu
+            const tokenInput = document.getElementById('tokenInput');
+            tokenInput.style.opacity = '0';
+            tokenInput.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                tokenInput.style.transition = 'all 0.5s ease';
+                tokenInput.style.opacity = '1';
+                tokenInput.style.transform = 'translateX(0)';
+            }, 500);
+        });
+        
+        // Buton hover efektleri
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px) scale(1.02)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+} 
