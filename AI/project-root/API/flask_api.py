@@ -2,193 +2,146 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # web_api.py - ASP.NET Controller'ına uygun format
-from flask import Flask, request, jsonify
+
+from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
-from graph.flow import create_graph
+from scraper.trendyol_scraper import scrape_trendyol
+from llm.gemini_suggester import extract_filters_from_prompt, analyze_products_with_gemini
+from graph.flow import create_graph  # Graph sistemi import et
+import re
 import uuid
 
 app = Flask(__name__)
-CORS(app, origins="*")
+app.secret_key = 'your-secret-key-change-this'  # Session için gerekli
+CORS(app)
 
-# Session'ları saklamak için basit dictionary
-user_sessions = {}
+# Graph'ı bir kere oluştur - performans için
+graph = create_graph()
 
-@app.route('/analyze', methods=['POST', 'OPTIONS'])
+@app.route('/analyze', methods=['POST'])
 def analyze():
-    """ASP.NET Controller'ının beklediği format"""
-    
-    # OPTIONS request için CORS
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'ok'}), 200
-    
     try:
         print("🔍 /analyze endpoint'ine istek geldi")
         
-        # JSON data al
+        # Session ID kontrolü - yoksa oluştur
+        if 'session_id' not in session:
+            session['session_id'] = str(uuid.uuid4())
+            print(f"🆔 Yeni session ID oluşturuldu: {session['session_id']}")
+        else:
+            print(f"🆔 Mevcut session ID kullanılıyor: {session['session_id']}")
+        
         data = request.get_json()
-        print(f"📥 Gelen data: {data}")
+        user_input = data.get('user_input', '').strip()
         
-        if not data:
-            print("❌ JSON data yok!")
-            return jsonify({'error': 'JSON data gerekli'}), 400
-        
-        # ASP.NET Controller "user_input" bekliyor
-        user_input = data.get('user_input', '')
         print(f"💬 User input: '{user_input}'")
         
         if not user_input:
-            print("❌ user_input boş!")
-            return jsonify({'error': 'user_input alanı gerekli'}), 400
+            return jsonify({'error': 'user_input is required'}), 400
         
-        # Her istek için yeni session (basit yaklaşım)
-        session_id = str(uuid.uuid4())
+        print("🚀 AI Graph çalıştırılıyor...")
         
-        # Session oluştur
-        if session_id not in user_sessions:
-            print(f"📝 Yeni session oluşturuluyor: {session_id}")
-            user_sessions[session_id] = {
-                'graph': create_graph(),
-                'message_count': 0
-            }
-        
-        user_sessions[session_id]['message_count'] += 1
-        graph = user_sessions[session_id]['graph']
-        
-        print(f"🚀 Graph invoke başlatılıyor...")
-        
-        # Ana AI mantığını çalıştır
-        result = graph.invoke({
-            "input": user_input,
-            "session_id": session_id
-        })
-        
-        print(f"✅ Graph result alındı: {type(result)}")
-        print(f"📤 Result: {result}")
-        
-        # ASP.NET Controller'ının beklediği formata çevir
-        products = []
-        
-        if isinstance(result, dict):
-            # Ürün listesi varsa
-            if result.get('result') and isinstance(result['result'], list):
-                for item in result['result']:
-                    product = {
-                        'name': item.get('title', 'Ürün adı yok'),
-                        'price': extract_price(item.get('price', '0')),
-                        'image': item.get('image', '')
-                    }
-                    products.append(product)
+        # ÖNCELİKLE GRAPH SİSTEMİNİ DENE
+        try:
+            result = graph.invoke({
+                "input": user_input,
+                "session_id": session['session_id']  # Session ID'yi ekle
+            })
             
-            # Sadece açıklama varsa (memory response vs.)
-            elif result.get('memory_response') or result.get('explanation'):
-                # Açıklama varsa sahte bir ürün ekle
-                explanation = result.get('memory_response') or result.get('explanation') or str(result)
-                product = {
-                    'name': f"Açıklama: {explanation[:100]}...",
-                    'price': 0.0,
-                    'image': ''
-                }
-                products.append(product)
+            print(f"✅ AI sonucu alındı: {type(result)}")
+            
+            # Eğer graph'tan ürün gelirse, onu döndür
+            if result.get("result") and isinstance(result["result"], list) and len(result["result"]) > 0:
+                print(f"🛍️ Graph'tan {len(result['result'])} ürün döndürülüyor")
+                return jsonify({
+                    'products': result["result"],
+                    'memory_response': result.get("memory_response", ""),
+                    'explanation': result.get("explanation", ""),
+                    'source': 'ai_graph'
+                })
+            
+            # Eğer hafıza cevabı varsa ama ürün yoksa
+            if result.get("memory_response"):
+                print(f"📚 Hafıza cevabı döndürülüyor: {result['memory_response']}")
+                return jsonify({
+                    'products': [],
+                    'memory_response': result["memory_response"],
+                    'explanation': result.get("explanation", ""),
+                    'message': result["memory_response"],
+                    'source': 'memory'
+                })
+            
+            # Eğer graph'tan hata gelirse
+            if result.get("error"):
+                print(f"🚫 Graph'tan hata: {result['error']}")
+                # Hata durumunda da eski sisteme düş
+                
+        except Exception as graph_error:
+            print(f"❌ Graph sistemi hatası: {graph_error}")
+            # Graph hatası durumunda eski sisteme düş
         
-        # ASP.NET Controller'ının beklediği format
-        response = {
-            'products': products
-        }
+        print("🔄 AI'dan ürün gelmedi, scraper'ı çalıştırıyoruz")
         
-        print(f"📤 Response gönderiliyor: {len(products)} ürün")
-        return jsonify(response)
+        # ESKİ SİSTEM - SCRAPER + FİLTRELER
+        filters = extract_filters_from_prompt(user_input)
+        query = filters.get("query", user_input).lower().strip()
+        max_price = filters.get("max_price", None)
+
+        match = re.search(r"(?:\d+\s*TL\s*(?:altı|üstü)?\s*)?(.*)", query, flags=re.IGNORECASE)
+        if match:
+            query = match.group(1).strip()
+
+        print(f"🕷️ Trendyol scraper çalıştırılıyor...")
+        all_products = scrape_trendyol(query, max_pages=2, max_results=100)
+        
+        if not all_products:
+            print("❌ Scraper'dan ürün bulunamadı")
+            return jsonify({'error': 'Ürün bulunamadı.'}), 404
+
+        if max_price:
+            all_products = [p for p in all_products if p["price"] <= max_price]
+            
+        if not all_products:
+            print("❌ Fiyat filtresinden sonra ürün kalmadı")
+            return jsonify({'error': 'Fiyat filtresinden sonra ürün kalmadı.'}), 404
+
+        print(f"📤 Toplam {len(all_products)} ürün döndürülüyor")
+        return jsonify({
+            'products': all_products,
+            'source': 'scraper'
+        })
         
     except Exception as e:
-        print(f"❌ HATA OLUŞTU: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        
-        # Hata durumunda boş ürün listesi döndür
-        return jsonify({
-            'products': []
-        }), 200  # 500 yerine 200 döndür ki Controller hata almasın
+        print(f"❌ Genel hata: {str(e)}")
+        return jsonify({'error': f'Beklenmeyen bir hata oluştu: {str(e)}'}), 500
 
-def extract_price(price_str):
-    """Fiyat string'ini float'a çevir"""
+@app.route('/clear-session', methods=['POST'])
+def clear_session():
+    """Session'ı temizle - yeni konuşma başlat"""
     try:
-        # "150 TL" -> 150.0
-        # "150.50 TL" -> 150.5
-        if isinstance(price_str, (int, float)):
-            return float(price_str)
-        
-        if isinstance(price_str, str):
-            # TL, ₺ gibi para birimlerini temizle
-            price_clean = price_str.replace('TL', '').replace('₺', '').replace(',', '.').strip()
-            return float(price_clean)
-        
-        return 0.0
-    except:
-        return 0.0
-
-@app.route('/health', methods=['GET'])
-def health():
-    """API sağlık kontrolü"""
-    return jsonify({
-        'status': 'healthy',
-        'message': 'Trendyol AI API - ASP.NET Uyumlu',
-        'active_sessions': len(user_sessions),
-        'endpoint': '/analyze'
-    })
-
-@app.route('/test', methods=['POST'])
-def test():
-    """Test endpoint"""
-    try:
-        data = request.get_json()
+        session.clear()
+        print("🧹 Session temizlendi")
         return jsonify({
-            'products': [
-                {
-                    'name': 'Test Gaming Mouse',
-                    'price': 299.99,
-                    'image': 'https://example.com/mouse.jpg'
-                },
-                {
-                    'name': 'Test Keyboard',
-                    'price': 199.99,
-                    'image': 'https://example.com/keyboard.jpg'
-                }
-            ]
+            'success': True,
+            'message': 'Konuşma geçmişi temizlendi, yeni bir oturum başlatıldı.'
         })
     except Exception as e:
-        return jsonify({'products': []}), 200
+        return jsonify({
+            'success': False,
+            'error': f'Session temizlenirken hata: {str(e)}'
+        })
 
-@app.route('/', methods=['GET'])
-def home():
-    """Ana sayfa"""
-    return jsonify({
-        'title': 'Trendyol AI API - ASP.NET Compatible',
-        'message': 'API çalışıyor',
-        'endpoint': '/analyze',
-        'expected_request': {
-            'method': 'POST',
-            'url': '/analyze',
-            'body': {
-                'user_input': 'gaming mouse öner'
-            }
-        },
-        'expected_response': {
-            'products': [
-                {
-                    'name': 'Ürün adı',
-                    'price': 299.99,
-                    'image': 'https://...'
-                }
-            ]
-        }
-    })
+@app.route('/products', methods=['GET'])
+def show_products():
+    query = request.args.get('q', '')
+    if not query:
+        return 'Arama sorgusu giriniz', 400
+    products = scrape_trendyol(query, max_pages=2, max_results=20)
+    return render_template('products.html', products=products, query=query)
+
+@app.route('/')
+def index():
+    """Ana sayfa - web arayüzü"""
+    return render_template('index.html')
 
 if __name__ == "__main__":
-    print("🚀 Trendyol AI API (ASP.NET Uyumlu) Başlatılıyor...")
-    print("📍 http://localhost:5000")
-    print("🔍 Health: http://localhost:5000/health") 
-    print("🧪 Test: POST http://localhost:5000/test")
-    print("💬 Chat: POST http://localhost:5000/analyze")
-    print("-" * 50)
-    
-    # ASP.NET Controller port 5000 bekliyor
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,53 +1,40 @@
-# graph/nodes/memory_node.py - Session ID desteği ile
+# graph/nodes/memory_node.py - Bu dosyayı oluşturun
+
 from memory.memory import conversation_chain
 
 def memory_node(state: dict):
     """
-    Kullanıcının geçmiş tercihlerini analiz eder ve hafıza response'u üretir
+    Hafıza tabanlı cevap üret - önceki konuşmaları hatırla
     """
     try:
         user_input = state.get("input", "")
+        session_id = state.get("session_id", "default")
         
-        # 🆔 Session ID'yi state'den al, yoksa default kullan
-        session_id = state.get("session_id", "default-user")
+        print(f"🧠 Memory node - User input: {user_input}")
+        print(f"🧠 Session ID: {session_id}")
         
         # Conversation chain'i session ID ile çalıştır
-        response = conversation_chain.invoke(
+        memory_result = conversation_chain.invoke(
             {"input": user_input},
             config={"configurable": {"session_id": session_id}}
         )
         
-        # 🧠 Eğer LLM cevabı string ise dict'e sar
-        if isinstance(response, str):
-            return {
-                **state,
-                "memory_response": response,
-                "explanation": response,
-                "session_id": session_id  # Session ID'yi koru
-            }
+        memory_response = memory_result.get("memory_response", "")
+        explanation = memory_result.get("explanation", "")
         
-        # 🧠 Eğer dict ise, gerekli alanları state'e doğrudan yaz
-        if isinstance(response, dict):
-            return {
-                **state,
-                "memory_response": response.get("memory_response", ""),
-                "explanation": response.get("explanation", ""),
-                "session_id": session_id  # Session ID'yi koru
-            }
+        print(f"🧠 Memory response: {memory_response[:100]}...")
         
-        # 🔚 Diğer tüm türler için fallback
+        # State'i güncelle
         return {
             **state,
-            "memory_response": str(response),
-            "explanation": str(response),
-            "session_id": session_id  # Session ID'yi koru
+            "memory_response": memory_response,
+            "explanation": explanation
         }
         
     except Exception as e:
         print(f"❌ Memory node hatası: {e}")
         return {
             **state,
-            "memory_response": f"Hafıza hatası: {str(e)}",
-            "explanation": f"Hafıza hatası: {str(e)}",
-            "session_id": state.get("session_id", "default-user")  # Session ID'yi koru
+            "memory_response": "",
+            "explanation": f"Memory hatası: {str(e)}"
         }
