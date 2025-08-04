@@ -228,3 +228,235 @@
         });
     </script>
 }
+
+
+<!-- @section Scripts {
+    <script>
+        // Sayfa yüklendiğinde animasyonlar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kart animasyonu
+            const card = document.querySelector('.card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(50px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.8s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // İkon animasyonları
+            const icons = document.querySelectorAll('.bi');
+            icons.forEach((icon, index) => {
+                setTimeout(() => {
+                    icon.classList.add('animate__animated', 'animate__bounceIn');
+                }, 200 * index);
+            });
+        });
+        
+        // Buton hover efektleri
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px) scale(1.02)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Yeni Konuşma Fonksiyonu
+        async function clearSession() {
+            try {
+                const response = await fetch('http://localhost:5000/clear-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('aiResult');
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            ${data.message}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Hata: ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('aiResult').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Session temizlenirken hata oluştu: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // AI Arayüzü Scripti - Memory desteği ile
+        document.getElementById('aiForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const prompt = document.getElementById('userPrompt').value.trim();
+            const resultDiv = document.getElementById('aiResult');
+            const errorDiv = document.getElementById('aiError');
+            const btnText = document.getElementById('aiBtnText');
+            const loading = document.getElementById('aiLoading');
+            
+            resultDiv.innerHTML = '';
+            errorDiv.classList.add('d-none');
+            btnText.classList.add('d-none');
+            loading.classList.remove('d-none');
+            
+            try {
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_input: prompt })
+                });
+                
+                btnText.classList.remove('d-none');
+                loading.classList.add('d-none');
+                
+                if (!response.ok) {
+                    const err = await response.json();
+                    errorDiv.textContent = err.error || 'Bir hata oluştu.';
+                    errorDiv.classList.remove('d-none');
+                    return;
+                }
+                
+                const data = await response.json();
+                let html = '';
+                
+                // Kullanıcı sorusunu göster
+                html += `
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-chat-quote me-2"></i>
+                        <strong>Sizin Sorunuz:</strong> "${prompt}"
+                    </div>
+                `;
+                
+                // Memory cevabını göster
+                if (data.memory_response) {
+                    html += `
+                        <div class="alert alert-success mb-3">
+                            <i class="bi bi-brain me-2"></i>
+                            <strong>AI Cevabı:</strong> ${data.memory_response}
+                        </div>
+                    `;
+                }
+                
+                // Açıklamayı göster
+                if (data.explanation) {
+                    html += `
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Açıklama:</strong> ${data.explanation}
+                        </div>
+                    `;
+                }
+                
+                // Genel mesaj varsa göster
+                if (data.message && !data.memory_response) {
+                    html += `
+                        <div class="alert alert-primary mb-3">
+                            <i class="bi bi-chat-dots me-2"></i>
+                            <strong>Mesaj:</strong> ${data.message}
+                        </div>
+                    `;
+                }
+                
+                // Ürünleri kart olarak göster
+                if (data.products && data.products.length > 0) {
+                    const maxProducts = 8;
+                    const sourceText = data.source === 'ai_graph' ? 'AI Öneri Sistemi' : 
+                                     data.source === 'memory' ? 'Hafıza' : 'Arama Motoru';
+                    
+                    html += `
+                        <div class="mb-3">
+                            <h5 class="text-primary">
+                                <i class="bi bi-bag-check me-2"></i>
+                                Bulunan Ürünler (${data.products.length} adet)
+                                <small class="text-muted"> - Kaynak: ${sourceText}</small>
+                            </h5>
+                        </div>
+                        <div class="row justify-content-center">
+                    `;
+                    
+                    data.products.slice(0, maxProducts).forEach(product => {
+                        // Ürün başlığını kontrol et (title veya name olabilir)
+                        const productTitle = product.title || product.name || 'Ürün';
+                        const productPrice = product.price || 0;
+                        const productImage = product.image || '/wwwroot/img/no-image.png';
+                        const productLink = product.link || '#';
+                        const whyRecommended = product.why_recommended || '';
+                        
+                        html += `
+                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                                <div class="custom-product-card h-100 shadow-sm">
+                                    <div class="img-container">
+                                        <img src="${productImage}" class="card-img-top" alt="${productTitle}" 
+                                             onerror="this.onerror=null;this.src='/wwwroot/img/no-image.png';">
+                                    </div>
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="product-title mb-2" title="${productTitle}">
+                                            ${productTitle.length > 60 ? productTitle.substring(0, 57) + '...' : productTitle}
+                                        </div>
+                                        <div class="product-price mb-2">
+                                            <i class="bi bi-currency-exchange me-1"></i>
+                                            ${productPrice} <span class="text-muted">TL</span>
+                                        </div>
+                                        ${whyRecommended ? `
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                <i class="bi bi-lightbulb me-1"></i>${whyRecommended}
+                                            </small>
+                                        </div>
+                                        ` : ''}
+                                        <a href="${productLink}" target="_blank" class="btn btn-primary btn-sm mt-auto w-100">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>Trendyol'da Gör
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                } else if (!data.memory_response && !data.message) {
+                    html += `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Ürün bulunamadı.
+                        </div>
+                    `;
+                }
+                
+                resultDiv.innerHTML = html;
+                
+                // Input'u temizleme (isteğe bağlı)
+                // document.getElementById('userPrompt').value = '';
+                
+            } catch (err) {
+                btnText.classList.remove('d-none');
+                loading.classList.add('d-none');
+                errorDiv.textContent = 'Sunucuya ulaşılamıyor veya ağ hatası: ' + err.message;
+                errorDiv.classList.remove('d-none');
+                console.error('Fetch hatası:', err);
+            }
+        });
+        
+        // Enter tuşu ile gönder
+        document.getElementById('userPrompt').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('aiForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+} -->
