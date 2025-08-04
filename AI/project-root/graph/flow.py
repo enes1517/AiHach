@@ -20,36 +20,22 @@ class AppState(TypedDict):
     result: str
     memory_response: str
     explanation: str
-    session_id: Optional[str]  # Session ID eklendi
+    session_id: Optional[str]
+    category: Optional[str]
 
 def should_continue_with_search(state: AppState) -> str:
-    """Memory'den sonra arama yapılıp yapılmayacağına karar ver"""
-    
     memory_response = state.get("memory_response", "")
     user_input = state.get("input", "").lower()
+    category = state.get("category", "")
     
-    print(f"🤔 Should continue? Memory response: {bool(memory_response)}")
-    print(f"🤔 User input: {user_input}")
-    
-    # Memory response yoksa direkt arama yap
-    if not memory_response:
-        print("➡️ Memory response yok, aramaya devam")
+    print(f"🤔 Should continue check - Category: {category}")
+    if category and any(keyword in user_input for keyword in ["öner", "göster", "alınır"]):
+        print("➡️ Kategori ve ürün talebi var, aramaya devam")
         return "validate"
-    
-    # Memory response'da "arama", "arıyorum", "buluyorum" gibi kelimeler varsa arama yap
-    search_keywords = ["arama", "arıyorum", "buluyorum", "bakıyorum", "gösteriyorum"]
-    if any(keyword in memory_response.lower() for keyword in search_keywords):
-        print("➡️ Memory'de arama kelimesi var, aramaya devam")
+    if any(indicator in memory_response.lower() for indicator in ["arama", "arıyorum"]):
+        print("➡️ Memory'de arama belirteci var, aramaya devam")
         return "validate"
-    
-    # Kullanıcı yeni ürün türü soruyorsa arama yap
-    new_product_keywords = ["laptop", "telefon", "kulaklık", "tablet", "saat", "ayakkabı", "gömlek", "pantolon", "kamera", "mouse"]
-    if any(keyword in user_input for keyword in new_product_keywords):
-        print("➡️ Yeni ürün türü soruldu, aramaya devam")
-        return "validate"
-    
-    # Hiçbiri yoksa memory'den cevap yeterli, bitir
-    print("➡️ Memory cevabı yeterli, arama yapmadan bitir")
+    print("➡️ Memory cevabı yeterli")
     return "end"
 
 def create_graph():

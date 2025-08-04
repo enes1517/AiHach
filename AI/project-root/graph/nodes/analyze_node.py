@@ -1,27 +1,22 @@
 from llm.gemini_suggester import analyze_products_with_gemini
 
 def analyze_node(state: dict):
-    """
-    Ürünleri Gemini ile analiz eder ve sonucu state'e ekler
-    """
     try:
         products = state.get("products", [])
         user_input = state.get("input", "")
+        category = state.get("category", "")
         
-        # Gemini ile analiz yap
-        analysis_result = analyze_products_with_gemini(products, user_input)
+        analysis_result = analyze_products_with_gemini(products, user_input, category)
         
-        # ✅ DICT döndür, string değil!
         return {
             **state,
-            "result": analysis_result,  # Analiz sonucunu result'a kaydet
-            "analysis": analysis_result  # Ek olarak analysis field'ına da kaydet
+            "result": analysis_result,
+            "analysis": analysis_result
         }
-        
     except Exception as e:
         print(f"❌ Analyze node hatası: {e}")
         return {
             **state,
-            "result": f"Analiz hatası: {str(e)}",
+            "result": [],
             "error": str(e)
         }

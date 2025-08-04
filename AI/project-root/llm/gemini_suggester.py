@@ -46,9 +46,10 @@ import json
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel(model_name="models/gemini-2.5-flash-lite")
 
-def analyze_products_with_gemini(products: list, user_request: str = "") -> str:
+def analyze_products_with_gemini(products: list, user_request: str = "", category: str = "") -> list:
     prompt = f"""
 Kullanıcının isteği: "{user_request}"
+Kategori: "{category}" (Sadece bu kategorideki ürünleri öner, başka kategoriden sapma yapma.)
 
 Aşağıda Trendyol'dan çekilen ürün listesi yer almaktadır. Her ürün sözlük olarak:
 - name
@@ -61,12 +62,26 @@ Aşağıda Trendyol'dan çekilen ürün listesi yer almaktadır. Her ürün söz
 Ürün listesi:
 {json.dumps(products, ensure_ascii=False)}
 
-Yukarıdaki ürünleri, kullanıcının isteğine göre filtrele ve analiz et.
-En iyi ürünleri öner. Türkçe, sade ve anlaşılır şekilde cevap ver.
-"""
-    response = gemini_model.generate_content(prompt)
-    return response.text
+KURALLAR:
+1. Sadece "{category}" kategorisindeki ürünleri analiz et ve öner.
+2. En iyi 10 ürünü seç (fiyat, rating ve rating_count'a göre).
+3. Her öneri için şu formatı kullan:
+   - Ürün: [name]
+     - Özellikler: [Kısa özellik tahmini, örneğin ekran boyutu, çözünürlük vb. - eğer veri yoksa "bilinmeyen" yaz]
+     - Fiyat Aralığı: [price] TL
+     - Neden Önerildi: [Kısa açıklama, örneğin "Yüksek rating" veya "Uygun fiyat"]
+4. Eğer uygun ürün yoksa, "Bu kategoride uygun ürün bulunamadı" de.
+5. Cevabı JSON listesi olarak döndür.
 
+Cevabın:
+"""
+    try:
+        response = gemini_model.generate_content(prompt)
+        parsed = json.loads(response.text) if response.text.strip().startswith('[') else []
+        return parsed if isinstance(parsed, list) else []
+    except Exception as e:
+        print(f"⚠️ Analyze_products_with_gemini hatası: {e}")
+        return []
 def explain_recommendation(products: list, query: str) -> list:
     prompt = f"""
 Kullanıcının isteği: "{query}"

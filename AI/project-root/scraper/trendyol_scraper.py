@@ -12,73 +12,117 @@ def scroll_to_bottom(driver, pause_time=2, max_scrolls=10):
 
 def scrape_trendyol(query: str, max_pages: int = 1, max_results: int = 100) -> list:
     options = Options()
-    options.add_argument("--headless")  # Görünmez tarayıcı istersen aktif et
+    options.add_argument("--headless")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
-
+    
     all_results = []
-    page = 1
-
-    while page <= max_pages and len(all_results) < max_results:
+    
+    for page in range(1, max_pages + 1):
         print(f"🔍 Sayfa {page} taranıyor...")
-        url = f"https://www.trendyol.com/sr?q={query.replace(' ', '+')}&pi={page}"
+        
+        # ✅ URL düzeltmesi
+        url = f"https://www.trendyol.com/sr?q={query.replace(' ', '%20')}&pi={page}"
+        print(f"🌐 URL: {url}")
+        
         driver.get(url)
-        time.sleep(3)
-        scroll_to_bottom(driver)
-
-        # ✅ Daha genel ve sağlam selector
-        product_cards = driver.find_elements(By.CSS_SELECTOR, "div.p-card-wrppr")
-
+        time.sleep(4)  # Biraz daha bekle
+        
+        # ✅ Güncel selector'lar - farklı seçenekleri dene
+        selectors = [
+            "div.p-card-wrppr",
+            "div[data-testid='product-card']", 
+            "div.product-item",
+            ".p-card-chldrn-cntnr"
+        ]
+        
+        product_cards = []
+        for selector in selectors:
+            product_cards = driver.find_elements(By.CSS_SELECTOR, selector)
+            if product_cards:
+                print(f"✅ Selector çalıştı: {selector} ({len(product_cards)} ürün)")
+                break
+        
         if not product_cards:
-            print("⚠️ Ürün kartları bulunamadı.")
-            break
-
-        for wrapper in product_cards:
+            print("❌ Hiçbir selector çalışmadı")
+            continue
+            
+        for card in product_cards[:max_results]:
             try:
-                card = wrapper.find_element(By.CSS_SELECTOR, "a.p-card-chldrn-cntnr")
-
-                brand = card.find_element(By.CLASS_NAME, "prdct-desc-cntnr-ttl").text.strip()
-                model = card.find_element(By.CLASS_NAME, "prdct-desc-cntnr-name").text.strip()
-                description = card.find_element(By.CLASS_NAME, "product-desc-sub-text").text.strip()
-                name = f"{brand} {model} {description}"
-
+                # İsim çıkarma - çoklu selector
+                name = ""
+                name_selectors = [
+                    ".prdct-desc-cntnr-name",
+                    "[data-testid='product-name']",
+                    ".product-name",
+                    ".p-card-wrppr .name"
+                ]
+                
+                for sel in name_selectors:
+                    try:
+                        name_elem = card.find_element(By.CSS_SELECTOR, sel)
+                        name = name_elem.text.strip()
+                        if name:
+                            break
+                    except:
+                        continue
+                
+                if not name:
+                    continue
+                
+                # Fiyat çıkarma
+                price = 0
+                price_selectors = [
+                    ".prc-box-dscntd",
+                    ".price-item", 
+                    "[data-testid='price-current-price']"
+                ]
+                
+                for sel in price_selectors:
+                    try:
+                        price_elem = card.find_element(By.CSS_SELECTOR, sel)
+                        price_text = price_elem.text
+                        price = float(price_text.replace("TL", "").replace(".", "").replace(",", ".").strip())
+                        break
+                    except:
+                        continue
+                
+                # Link çıkarma
                 try:
-                    price_text = card.find_element(By.CLASS_NAME, "price-item").text
+                    link_elem = card.find_element(By.CSS_SELECTOR, "a")
+                    link = link_elem.get_attribute("href")
+                    if not link.startswith("http"):
+                        link = f"https://www.trendyol.com{link}"
                 except:
-                    price_text = card.find_element(By.CLASS_NAME, "prc-box-dscntd").text
-                price = float(price_text.replace("TL", "").replace(".", "").replace(",", ".").strip())
-
+                    link = ""
+                
+                # Resim URL - BONUS
+                image_url = ""
                 try:
-                    rating = card.find_element(By.CLASS_NAME, "rating-score").text.strip()
+                    img_elem = card.find_element(By.CSS_SELECTOR, "img")
+                    image_url = img_elem.get_attribute("src")
                 except:
-                    rating = "0"
-
-                try:
-                    rating_count = card.find_element(By.CLASS_NAME, "ratingCount").text.strip("() ")
-                except:
-                    rating_count = "0"
-
-                link = card.get_attribute("href")
-                if link.startswith("/"):
-                    link = "https://www.trendyol.com" + link
-
+                    pass
+                
                 all_results.append({
                     "name": name,
                     "price": price,
-                    "rating": rating,
-                    "rating_count": rating_count,
-                    "link": link
+                    "rating": "0",
+                    "rating_count": "0", 
+                    "link": link,
+                    "image": image_url  # ✅ Resim eklendi
                 })
-
+                
                 if len(all_results) >= max_results:
                     break
-            except:
+                    
+            except Exception as e:
+                print(f"⚠️ Ürün parse hatası: {e}")
                 continue
-
-        page += 1
-
+    
     driver.quit()
+    print(f"🎯 Toplam {len(all_results)} ürün çekildi")
     return all_results
