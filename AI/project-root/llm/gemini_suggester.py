@@ -7,38 +7,73 @@ from langchain_core.runnables import RunnableSequence
 
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", google_api_key=os.getenv("GEMINI_API_KEY"))
+# 🔑 LLM başlatılıyor
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash-lite",
+    google_api_key=os.getenv("GEMINI_API_KEY")
+)
 
+# ✅ Daha net ve örnekli prompt
 filter_prompt = PromptTemplate.from_template("""
 Kullanıcının isteği: "{user_input}"
 
-Yalnızca geçerli bir ürün isteği varsa aşağıdaki JSON formatını ver:
+Lütfen aşağıdaki gibi geçerli bir JSON üret. Aşağıdaki örnekleri incele:
+
+İstek: "30000 altı saat öner"
+Yanıt:
 {{
-  "query": "...",      
-  "max_price": ...,    
-  "category": "..."    
+  "query": "saat",
+  "max_price": 30000,
+  "category": "saat"
 }}
 
-Eğer anlamlı bir istek değilse sadece:
+İstek: "5000 TL altı televizyon arıyorum"
+Yanıt:
+{{
+  "query": "televizyon",
+  "max_price": 5000,
+  "category": "televizyon"
+}}
+
+İstek: "telefon istiyorum"
+Yanıt:
+{{
+  "query": "telefon",
+  "max_price": null,
+  "category": "telefon"
+}}
+
+Eğer anlamlı bir ürün sorgusu değilse sadece:
 {{
   "error": "Geçersiz sorgu"
 }}
+
+Cevabın SADECE geçerli JSON formatında olsun. Açıklama veya ekstra metin ekleme.
 """)
 
+# ✅ Çıktıyı JSON'a çevirecek parser
 parser = JsonOutputParser()
 
+# ✅ Zinciri tanımla
 chain: RunnableSequence = filter_prompt | llm | parser
+
+# ✅ Ana fonksiyon
 
 def extract_filters_from_prompt(user_input: str) -> dict:
     try:
         result = chain.invoke({"user_input": user_input})
+
         if isinstance(result, dict) and "error" in result:
             print("❌ Geçersiz kullanıcı isteği:", user_input)
             return None
-        return result
+
+        return result  # Doğrudan filtre dict'i dön
+
     except Exception as e:
         print("⚠️ LangChain işleme hatası:", e)
         return None
+
+
 
 import google.generativeai as genai
 import json
@@ -46,42 +81,63 @@ import json
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel(model_name="models/gemini-2.5-flash-lite")
 
-def analyze_products_with_gemini(products: list, user_request: str = "", category: str = "") -> list:
-    prompt = f"""
-Kullanıcının isteği: "{user_request}"
-Kategori: "{category}" (Sadece bu kategorideki ürünleri öner, başka kategoriden sapma yapma.)
+def analyze_products_with_gemini(product_list: list, user_input: str) -> list:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_core.prompts import PromptTemplate
+    from langchain_core.runnables import RunnablePassthrough
+    import os
+    import json
+    import re
 
-Aşağıda Trendyol'dan çekilen ürün listesi yer almaktadır. Her ürün sözlük olarak:
-- name
-- price
-- rating
-- rating_count
-- link
-şeklindedir.
+    model = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash-latest",
+        temperature=0.7,
+        convert_system_message_to_human=True
+    )
 
-Ürün listesi:
-{json.dumps(products, ensure_ascii=False)}
+    product_list_text = "\n".join([f"{i+1}. {p['name']} - {p['price']} TL" for i, p in enumerate(product_list)])
 
-KURALLAR:
-1. Sadece "{category}" kategorisindeki ürünleri analiz et ve öner.
-2. En iyi 10 ürünü seç (fiyat, rating ve rating_count'a göre).
-3. Her öneri için şu formatı kullan:
-   - Ürün: [name]
-     - Özellikler: [Kısa özellik tahmini, örneğin ekran boyutu, çözünürlük vb. - eğer veri yoksa "bilinmeyen" yaz]
-     - Fiyat Aralığı: [price] TL
-     - Neden Önerildi: [Kısa açıklama, örneğin "Yüksek rating" veya "Uygun fiyat"]
-4. Eğer uygun ürün yoksa, "Bu kategoride uygun ürün bulunamadı" de.
-5. Cevabı JSON listesi olarak döndür.
+    prompt = PromptTemplate.from_template("""
+Aşağıda bazı ürünler listelenmiştir. Kullanıcının isteğine göre en uygun 10 ürünü seçip, her biri için aşağıdaki formatta JSON objesi oluştur.
 
-Cevabın:
-"""
+Format: 
+[
+  {{
+    "name": "ürün adı",
+    "price": 1500,
+    "link": "https://....",
+    "reason": "neden bu ürünü önerdin?"
+  }},
+  ...
+]
+
+Kullanıcı isteği: {user_input}
+
+Ürünler:
+{product_list}
+""")
+
+    chain = (
+        {"user_input": RunnablePassthrough(), "product_list": lambda x: product_list_text}
+        | prompt
+        | model
+    )
+
+    response = chain.invoke(user_input)
+    
+    # JSON dışındaki karakterleri temizle
+    json_start = response.content.find("[")
+    json_end = response.content.rfind("]") + 1
+    json_data = response.content[json_start:json_end]
+
     try:
-        response = gemini_model.generate_content(prompt)
-        parsed = json.loads(response.text) if response.text.strip().startswith('[') else []
+        parsed = json.loads(json_data)
         return parsed if isinstance(parsed, list) else []
     except Exception as e:
-        print(f"⚠️ Analyze_products_with_gemini hatası: {e}")
+        print("⚠️ JSON parse hatası:", e)
         return []
+
+
 def explain_recommendation(products: list, query: str) -> list:
     prompt = f"""
 Kullanıcının isteği: "{query}"

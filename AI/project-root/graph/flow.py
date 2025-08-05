@@ -24,17 +24,38 @@ class AppState(TypedDict):
     category: Optional[str]
 
 def should_continue_with_search(state: AppState) -> str:
+    """Memory'den sonra arama yapılıp yapılmayacağına karar ver"""
+    
     memory_response = state.get("memory_response", "")
     user_input = state.get("input", "").lower()
     category = state.get("category", "")
     
     print(f"🤔 Should continue check - Category: {category}")
-    if category and any(keyword in user_input for keyword in ["öner", "göster", "alınır"]):
+    print(f"🤔 Memory response: {memory_response[:50]}...")
+    
+    # ✅ Kategori varsa ve ürün soruyorsa devam et
+    if category and any(word in user_input for word in ["öner", "göster", "arıyorum", "hangi", "tl", "altı", "ucuz", "pahalı"]):
         print("➡️ Kategori ve ürün talebi var, aramaya devam")
         return "validate"
-    if any(indicator in memory_response.lower() for indicator in ["arama", "arıyorum"]):
+    
+    # Memory'de arama belirteci var mı?
+    search_indicators = ["arama", "arıyorum", "kontrol", "bakıyorum", "bekle"]
+    if any(indicator in memory_response.lower() for indicator in search_indicators):
         print("➡️ Memory'de arama belirteci var, aramaya devam")
         return "validate"
+    
+    # Fiyat soruları
+    price_keywords = ["tl altı", "ucuz", "pahalı", "fiyat", "altında", "bütçe"]
+    if any(keyword in user_input for keyword in price_keywords):
+        print("➡️ Fiyat sorusu, aramaya devam")
+        return "validate"
+    
+    # Yeni ürün türü
+    product_keywords = ["saat", "laptop", "telefon", "televizyon", "kulaklık", "tablet"]
+    if any(keyword in user_input for keyword in product_keywords):
+        print("➡️ Yeni ürün türü, aramaya devam")
+        return "validate"
+    
     print("➡️ Memory cevabı yeterli")
     return "end"
 

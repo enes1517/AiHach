@@ -8,6 +8,19 @@ from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 
+# 🔑 Son filtreleri saklamak için yeni alan
+last_filters_store = {}  # session_id -> filters
+
+def set_last_filters(session_id: str, filters: dict):
+    """Son kullanılan filtreleri kaydet"""
+    last_filters_store[session_id] = filters
+    print(f"📌 Son filtreler güncellendi: {filters}")
+
+def get_last_filters(session_id: str) -> dict:
+    """Son kullanılan filtreleri getir"""
+    return last_filters_store.get(session_id, {})
+
+
 # Ortam değişkenlerini yükle
 load_dotenv()
 
