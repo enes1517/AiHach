@@ -10,6 +10,8 @@ Selenium ile Trendyol scraping
 
 ASP.NET MVC ile modern web arayüzü
 
+Katmanlı mimari prensiplerine uygundur
+
 Hash algoritması ile şifreleme
 
 Çok adımlı konuşma desteği (session_id)
