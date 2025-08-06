@@ -18,9 +18,15 @@ CORS(app, supports_credentials=True)  # Session için credentials gerekli
 # Graph'ı bir kere oluştur
 graph = create_graph()
 
+# Flask API - /analyze endpoint düzeltmesi
+
+# Flask API - /analyze endpoint düzeltmesi
+
+# Flask API - /analyze endpoint düzeltmesi
+
 @app.route('/analyze', methods=['POST', 'OPTIONS'])
 def analyze():
-    """Ana analiz endpoint'i - Session desteği ile"""
+    """Ana analiz endpoint'i - HER ZAMAN ürün döndür"""
     
     if request.method == 'OPTIONS':
         return '', 200
@@ -33,8 +39,8 @@ def analyze():
         if not data:
             return jsonify({'error': 'JSON data required'}), 400
         
-        # Session ID yönetimi - DÜZELTME
-        session_id = data.get('session_id')  # Client'tan gelen session ID
+        # Session ID yönetimi
+        session_id = data.get('session_id')
         
         if not session_id:
             session_id = str(uuid.uuid4())
@@ -43,9 +49,9 @@ def analyze():
             print(f"🆔 Mevcut session ID kullanılıyor: {session_id}")
         
         # User input kontrolü
-        user_input = data.get('message', '').strip()  # 'message' field'ından al
+        user_input = data.get('message', '').strip()
         if not user_input:
-            user_input = data.get('user_input', '').strip()  # Fallback
+            user_input = data.get('user_input', '').strip()
             
         if not user_input:
             return jsonify({
@@ -66,27 +72,33 @@ def analyze():
             
             print(f"✅ AI sonucu alındı: {type(result)}")
             
+            # ✅ DÜZELTME: Memory response + Products birlikte gönder
+            products = result.get("result", [])
+            memory_response = result.get("memory_response", "")
+            
             # Response formatı - Client beklentisine uygun
             response_data = {
                 'session_id': session_id,
-                'response': result.get("memory_response", ""),
-                'products': result.get("result", []),
+                'response': memory_response,  # ✅ Memory context
+                'products': products,         # ✅ Ürünler
                 'explanation': result.get("explanation", ""),
                 'filters': result.get("filters", {}),
                 'success': True
             }
             
             # Ürün sayısı kontrolü
-            products = result.get("result", [])
             if isinstance(products, list) and len(products) > 0:
                 print(f"🛍️ Graph'tan {len(products)} ürün döndürülüyor")
                 response_data['total_found'] = len(products)
-            elif result.get("memory_response"):
-                print(f"📚 Hafıza cevabı döndürülüyor: {result['memory_response'][:50]}...")
-                response_data['total_found'] = 0
             else:
-                response_data['response'] = "Üzgünüm, aradığınız kriterlere uygun ürün bulunamadı."
+                print(f"❌ Hiç ürün bulunamadı")
                 response_data['total_found'] = 0
+                # ✅ Memory response varsa onu göster
+                if not memory_response:
+                    response_data['response'] = "Üzgünüm, aradığınız kriterlere uygun ürün bulunamadı."
+            
+            # ✅ DEBUG: Console'a yazdır
+            print(f"📤 Response data: response='{response_data.get('response', 'YOK')}', products={len(products)}")
             
             return jsonify(response_data)
             
@@ -94,10 +106,9 @@ def analyze():
             print(f"❌ Graph sistemi hatası: {graph_error}")
             print(f"📍 Hata detayı: {traceback.format_exc()}")
             
-            # Graph hatası durumunda fallback response
             return jsonify({
                 'session_id': session_id,
-                'response': "Şu anda bir teknik sorun yaşıyoruz. Lütfen daha sonra tekrar deneyin veya farklı bir arama yapmayı deneyin.",
+                'response': "Şu anda bir teknik sorun yaşıyoruz. Lütfen daha sonra tekrar deneyin.",
                 'products': [],
                 'explanation': '',
                 'filters': {},
