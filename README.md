@@ -32,6 +32,7 @@ Proje iki ana bileşenden oluşur:
 cd AI
 python -m venv venv
 venv\\Scripts\\activate        # MacOS/Linux: source venv/bin/activate
+cd project-root
 pip install -r requirements.txt
 ```
 .env dosyasını oluştur:
@@ -40,8 +41,7 @@ GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
 Flask API'yi başlat:
 ```bash
-Kopyala
-Düzenle
+cd API
 python flask_api.py
 ```
 Web Arayüzü (ASP.NET Core MVC)
