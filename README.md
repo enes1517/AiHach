@@ -67,23 +67,29 @@ root/
 ├── UserAuthMvc.sln           # Visual Studio çözüm dosyası
 └── .env                      # Gemini API anahtarı (AI klasörü içinde)
 ```
-⚙️ Kullanılan Teknolojiler
-Backend (AI tarafı)
+🧠 Kullanılan Teknolojiler – Detaylı Açıklamalar
+🔙 Backend (AI)
 Python 3.10+
+Yapay zeka sisteminin geliştirilmesinde kullanılan ana dil. Flask, Selenium ve Gemini API bu Python ortamında çalışır.
 
 Flask
+AI modülünü dış dünyaya açan HTTP tabanlı mikro web çatısıdır. Web arayüzü, Flask üzerinden API çağrısı yapar (örn. POST /analyze).
 
 Gemini API (Google AI)
+Kullanıcının doğal dilde yazdığı ürün isteğini anlayan LLM modelidir. Prompt tabanlı çalışır, LangChain ile entegre edilir.
 
 LangChain
+LLM çıktılarının daha kontrollü ve yapılandırılmış üretilmesini sağlar. Prompt şablonları ve çıktıyı JSON olarak alma işlemleri bu kütüphane ile yapılır.
 
 LangGraph
+AI node’larının bir akış içinde sıralı ve mantıklı şekilde çalışmasını sağlar.
+Bu projede şu node’lar vardır: Filter → Memory → Validate → Scrape → Check → Analyze → Explain → Format. Her biri sırayla yürütülür.
 
 Selenium
-
-BeautifulSoup4
+Trendyol gibi sitelerdeki ürünleri dinamik olarak çekmek için kullanılır. JavaScript ile yüklenen ürün kartlarını bekleyerek HTML'den veri çıkarır.
 
 python-dotenv
+.env dosyasındaki GEMINI_API_KEY gibi ortam değişkenlerini Flask uygulamasına yükler. API anahtarı güvenli şekilde burada tutulur.
 
 Frontend (Web tarafı)
 ASP.NET Core MVC
@@ -118,4 +124,4 @@ session_id sayesinde çok adımlı konuşmalar desteklenir.
 | Hüseyin Enes İPEK | Web UI, ASP.NET MVC            |
 
 🖼 Web Arayüzü
-![Web Arayüz Ekranı](https://your_image_hosting_link.com/screenshot.png)
+![Web Arayüz Ekranı](https://github.com/user-attachments/assets/dd9fe1c8-de30-4c4e-aa32-ef4758331188)
