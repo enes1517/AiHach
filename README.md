@@ -120,7 +120,7 @@ Her bir LLM çıktısı LangChain ile yapılandırılmıştır.
 session_id sayesinde çok adımlı konuşmalar desteklenir.
 | İsim              | Görev                          |
 | ----------------- | ------------------------------ |
-| Enes ÜLKÜ         | AI, Backend, LangChain, Gemini |
+| Enes ÜLKÜ         | AI, Backend(Ai), LangChain, Gemini |
 | Hüseyin Enes İPEK | Web UI, ASP.NET MVC            |
 
 🖼 Web Arayüzü
